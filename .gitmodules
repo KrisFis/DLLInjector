@@ -1,0 +1,4 @@
+[submodule "deps/ASTD"]
+	path = deps/ASTD
+	url = git@github.com:KrisFis/ASTD.git
+	branch = main
