@@ -358,21 +358,8 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	// Resolve DLL path
-	if (!args.dllPath.empty())
-	{
-		std::cout << "DLL file provided: " << args.dllPath << std::endl;
-	}
-	else
-	{
-		std::cout << "Enter DLL file: ";
-		std::getline(std::cin, args.dllPath);
-	}
-
-	if (!args.CheckDLL()) return 1;
-
 	// Resolve exec path if provided — skip menu entirely
-	if (!args.execPath.empty())
+	if (!args.dllPath.empty() && !args.execPath.empty())
 	{
 		std::cout << "Executable file provided: " << args.execPath << std::endl;
 		if (!args.CheckExec()) return 2;
@@ -389,11 +376,24 @@ int main(int argc, char* argv[])
 	std::cin >> option;
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
+	// Resolve DLL path
+	if (!args.dllPath.empty())
+	{
+		std::cout << "DLL file provided: " << args.dllPath << std::endl;
+	}
+	else
+	{
+		std::cout << "Enter DLL file: ";
+		std::getline(std::cin, args.dllPath);
+	}
+
+	if (!args.CheckDLL()) return 1;
+
 	switch (option)
 	{
 		case 1:
 		{
-			std::cout << "Enter executable file path: ";
+			std::cout << "Enter executable file: ";
 			std::getline(std::cin, args.execPath);
 			std::cout << std::endl;
 

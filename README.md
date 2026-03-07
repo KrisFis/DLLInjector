@@ -2,6 +2,8 @@
 
 A Windows DLL injection tool that supports both launching a new process with a DLL pre-injected, and attaching to an existing running process.
 
+**Disclaimer**: This tool is intended for **legitimate development and debugging purposes only**, such as modding, instrumentation, and testing of software you own or have permission to modify. Do not use this tool for cheating in games, bypassing anti-cheat systems, unauthorized access, or any other malicious or illegal activity. The author is not responsible for any misuse of this software.
+
 ## Features
 
 - Launch a new process in suspended state and inject a DLL before it runs
@@ -14,14 +16,47 @@ A Windows DLL injection tool that supports both launching a new process with a D
 
 - Windows OS
 - MSVC or compatible compiler
-- Administrator privileges (recommended)
+- Supported architectures are `x64` and `x86`
+- Administrator privileges (optional)
 - Injector, DLL, and target process must all match in bitness (32-bit or 64-bit)
+
+## Building
+
+Requires [CMake](https://cmake.org/) 3.31+ and a C++17 compatible compiler (MSVC recommended).
+
+```bash
+git clone 
+cd DLLInjector
+cmake -B build
+cmake --build build
+```
+
+To explicitly target a specific architecture:
+
+```bash
+# 64-bit
+cmake -B build -A x64
+cmake --build build
+
+# 32-bit
+cmake -B build -A Win32
+cmake --build build
+```
+
+The output binary will be named `DLLInjector.exe` and placed in your build directory.
 
 ## Usage
 
 ```
-InjectDLL.exe (optional)<dll_path> (optional)<executable_path>
+InjectDLL.exe [options] <dll_path> [executable_path]
 ```
+
+### Options
+
+| Option               | Description                                                               |
+|----------------------|---------------------------------------------------------------------------|
+| `-h, --help, -?`     | Show help message                                                         |
+| `-t, --timeout <ms>` | Injection timeout in milliseconds (default: 10000). Use `0` for infinite. |
 
 ### Examples
 
@@ -32,13 +67,20 @@ InjectDLL.exe
 # Inject into a new process
 InjectDLL.exe C:\MyFolder\MyDll.dll C:\MyFolder\MyExecutable.exe
 
+# Attach to an existing process (will prompt for PID)
+InjectDLL.exe C:\MyFolder\MyDll.dll
+
+# Inject with infinite timeout (useful for waiting on a debugger)
+InjectDLL.exe --timeout 0 C:\MyFolder\MyDll.dll C:\MyFolder\MyExecutable.exe
+InjectDLL.exe -t 0 C:\MyFolder\MyDll.dll C:\MyFolder\MyExecutable.exe
+
 # Show help
 InjectDLL.exe --help
 ```
 
 ### Interactive Mode
 
-If no arguments are provided, the tool will prompt you to choose an option:
+If no executable path is provided, the tool will prompt you to choose an option:
 
 ```
 Available Options:
@@ -122,7 +164,7 @@ void WaitForDebugger()
 	DebugBreak(); // breaks immediately on attach
 }
 
-DWORD WINAPI DllMain(LPVOID)
+DWORD WINAPI DllMain(HMODULE hModule, DWORD reasonForCall, LPVOID lpReserved)
 {
 	WaitForDebugger(); // attach your debugger now
 	// ...
