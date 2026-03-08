@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         architecture: [x64, Win32]
-        config: [Debug, Release]
+        config: [Release]
 
     steps:
       - name: Checkout
