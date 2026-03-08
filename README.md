@@ -152,7 +152,7 @@ BOOL WINAPI DllMain(HMODULE hModule, DWORD reasonForCall, LPVOID lpReserved)
 
 ## Debugging
 
-To attach a debugger to the injected DLL before it runs, add a `WaitForDebugger` call at the start of `DllThreadMain`:
+To attach a debugger to the injected DLL before it runs, add a `WaitForDebugger` call at the start of `DllMain`:
 
 ```cpp
 void WaitForDebugger()
