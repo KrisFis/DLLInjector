@@ -1,13 +1,22 @@
 ﻿// Copyright Alternity Arts. All Rights Reserved.
 
-#include "ASTD/ASTD.h"
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include "Windows.h"
 
-#include <complex>
+#if defined(_WIN64)
+	#define ARCHITECTURE_32 0
+#else
+	#define ARCHITECTURE_32 1
+#endif
+
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <limits>
 
-constexpr uint8 CREATE_THREAD_ACCESS = PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ;
+constexpr DWORD CREATE_THREAD_ACCESS = PROCESS_CREATE_THREAD | PROCESS_QUERY_INFORMATION | PROCESS_VM_OPERATION | PROCESS_VM_WRITE | PROCESS_VM_READ;
+constexpr UINT16 MS_PER_SECOND = 1000;
 
 bool GetDLLBitness(const std::string& dllPath, bool& out32bit)
 {
@@ -177,17 +186,13 @@ bool InjectDLLAsync(const std::string& dllPath, DWORD pid, SInjectContext& outCo
 	return true;
 }
 
-bool InjectDLLSync(const std::string& dllPath, DWORD pid, const uint64 timeoutMs)
+bool InjectDLLSync(const std::string& dllPath, DWORD pid, const UINT64 timeoutMs)
 {
 	SInjectContext ctx;
-	if (!InjectDLLAsync(dllPath, pid, ctx))
-	{
-		std::cerr << "InjectDLL failed" << std::endl;
-		return false;
-	}
+	if (!InjectDLLAsync(dllPath, pid, ctx)) return false;
 
 	bool success = true;
-	const uint64 startMs = GetTickCount64();
+	const UINT64 startMs = GetTickCount64();
 	while (true)
 	{
 		if (const DWORD res = WaitForSingleObject(ctx.Thread, 100);
@@ -200,7 +205,7 @@ bool InjectDLLSync(const std::string& dllPath, DWORD pid, const uint64 timeoutMs
 		if (timeoutMs > 0 &&
 			GetTickCount64() - startMs > timeoutMs)
 		{
-			const double timeoutAsSec = (double)timeoutMs / SMisc::MS_PER_SECOND;
+			const double timeoutAsSec = (double)timeoutMs / MS_PER_SECOND;
 			std::cerr << "DLL injection timed out (" << timeoutAsSec << " seconds)" << std::endl;
 			success = false;
 			break;	
@@ -211,10 +216,8 @@ bool InjectDLLSync(const std::string& dllPath, DWORD pid, const uint64 timeoutMs
 	return success;
 }
 
-bool StartDLLInjectedProcess(const std::string& dllPath, const std::string& executablePath, const uint64 timeoutMs)
+bool StartDLLInjectedProcess(const std::string& dllPath, const std::string& executablePath, const UINT64 timeoutMs)
 {
-	std::cout << std::endl;
-
 	STARTUPINFO si = {};
 	si.cb = sizeof(si);
 	PROCESS_INFORMATION pi = {};
@@ -276,7 +279,7 @@ struct SLaunchArgs
 	SLaunchArgs() = default;
 	SLaunchArgs(int argc, char* argv[])
 	{
-		for (int32 i = 1; i < argc; i++)
+		for (INT32 i = 1; i < argc; i++)
 		{
 			std::string arg = argv[i];
 			if (arg == "--help" || arg == "-h" || arg == "-?")
@@ -323,7 +326,7 @@ struct SLaunchArgs
 		return CheckFilePath(execPath, "Executable");
 	}
 
-	uint64 timeoutMs = 10000;
+	UINT64 timeoutMs = 10000;
 	std::string dllPath;
 	std::string execPath;
 	bool shouldPrintHelp = false;
@@ -372,7 +375,7 @@ int main(int argc, char* argv[])
 	std::cout << "1) Start Process\n2) Attach To Process\n" << std::endl;
 	std::cout << "Pick Option: ";
 
-	int32 option;
+	INT32 option;
 	std::cin >> option;
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
@@ -395,7 +398,6 @@ int main(int argc, char* argv[])
 		{
 			std::cout << "Enter executable file: ";
 			std::getline(std::cin, args.execPath);
-			std::cout << std::endl;
 
 			if (!args.CheckExec()) return 2;
 			if (!StartDLLInjectedProcess(args.dllPath, args.execPath, args.timeoutMs)) return 3;
@@ -409,7 +411,6 @@ int main(int argc, char* argv[])
 
 			DWORD pid;
 			std::cin >> pid;
-			std::cout << std::endl;
 
 			if (!InjectDLLSync(args.dllPath, pid, args.timeoutMs)) return 3;
 			break;
