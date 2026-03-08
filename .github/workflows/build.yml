@@ -1,10 +1,7 @@
 name: Build
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,3 +20,9 @@ jobs:
 
       - name: Build
         run: cmake --build build --config ${{ matrix.config }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+            name: DLLInjector-${{ matrix.architecture }}-${{ matrix.config }}
+            path: build/${{ matrix.config }}/DLLInjector.exe
